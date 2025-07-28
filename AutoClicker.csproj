@@ -14,6 +14,16 @@
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="publish*\**" />
+    <EmbeddedResource Remove="publish*\**" />
+    <None Remove="publish*\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="*.bat" />
+  </ItemGroup>
+
 
 
 </Project>
