@@ -44,7 +44,7 @@ namespace AutoClicker
         private void InitializeComponent()
         {
             this.Text = "AutoClicker Pro";
-            this.Size = new Size(450, 400);
+            this.Size = new Size(455, 370);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
