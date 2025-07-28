@@ -32,25 +32,20 @@ namespace AutoClicker
         // UI Controls
         private TrackBar frequencyTrackBar;
         private NumericUpDown frequencyNumeric;
-        private Button startStopButton;
-        private Button recordPositionButton;
         private ComboBox hotkeyComboBox;
         private Label statusLabel;
         private Label clickCountLabel;
-        private Label positionLabel;
         private CheckBox randomDelayCheckBox;
         private NumericUpDown randomDelayNumeric;
         private NotifyIcon notifyIcon;
         private ContextMenuStrip trayMenu;
         private GroupBox settingsGroupBox;
         private GroupBox statusGroupBox;
-        private GroupBox positionGroupBox;
 
         // Application state
         private bool isClicking = false;
         private System.Threading.Timer clickTimer;
         private int clickCount = 0;
-        private Point clickPosition = new Point(-1, -1);
         private Random random = new Random();
         private uint currentHotkey = 0x78; // F9 by default
         private AppSettings settings;
@@ -160,59 +155,10 @@ namespace AutoClicker
                 Value = 50
             };
 
-            // Start/Stop button
-            startStopButton = new Button
-            {
-                Text = "Start Clicking",
-                Location = new Point(250, 130),
-                Size = new Size(150, 35),
-                BackColor = Color.LightGreen
-            };
-            startStopButton.Click += StartStopButton_Click;
-
             settingsGroupBox.Controls.AddRange(new Control[] {
                 frequencyLabel, frequencyTrackBar, frequencyNumeric,
                 hotkeyLabel, hotkeyComboBox,
                 randomDelayCheckBox, randomDelayNumeric,
-                startStopButton
-            });
-
-            // Position GroupBox
-            positionGroupBox = new GroupBox
-            {
-                Text = "Click Position",
-                Location = new Point(10, 220),
-                Size = new Size(420, 80)
-            };
-
-            recordPositionButton = new Button
-            {
-                Text = "Record Current Position",
-                Location = new Point(10, 25),
-                Size = new Size(150, 30)
-            };
-            recordPositionButton.Click += RecordPositionButton_Click;
-
-            positionLabel = new Label
-            {
-                Text = "Position: Click anywhere (default)",
-                Location = new Point(170, 30),
-                Size = new Size(240, 20)
-            };
-
-            Button resetPositionButton = new Button
-            {
-                Text = "Reset",
-                Location = new Point(170, 50),
-                Size = new Size(60, 25)
-            };
-            resetPositionButton.Click += (s, e) => {
-                clickPosition = new Point(-1, -1);
-                positionLabel.Text = "Position: Click anywhere (default)";
-            };
-
-            positionGroupBox.Controls.AddRange(new Control[] {
-                recordPositionButton, positionLabel, resetPositionButton
             });
 
             // Status GroupBox
@@ -220,7 +166,7 @@ namespace AutoClicker
             {
                 Text = "Status",
                 Location = new Point(10, 310),
-                Size = new Size(420, 100)
+                Size = new Size(420, 110)
             };
 
             statusLabel = new Label
@@ -241,7 +187,7 @@ namespace AutoClicker
             Button resetCounterButton = new Button
             {
                 Text = "Reset Counter",
-                Location = new Point(220, 45),
+                Location = new Point(180, 75),
                 Size = new Size(100, 25)
             };
             resetCounterButton.Click += (s, e) => {
@@ -252,8 +198,8 @@ namespace AutoClicker
             Button minimizeToTrayButton = new Button
             {
                 Text = "Minimize to Tray",
-                Location = new Point(330, 45),
-                Size = new Size(80, 25)
+                Location = new Point(290, 75),
+                Size = new Size(120, 25)
             };
             minimizeToTrayButton.Click += (s, e) => {
                 this.Hide();
@@ -266,7 +212,7 @@ namespace AutoClicker
             });
 
             this.Controls.AddRange(new Control[] {
-                settingsGroupBox, positionGroupBox, statusGroupBox
+                settingsGroupBox, statusGroupBox
             });
         }
 
@@ -332,18 +278,6 @@ namespace AutoClicker
             RegisterGlobalHotkey();
         }
 
-        private void StartStopButton_Click(object? sender, EventArgs e)
-        {
-            ToggleClicking();
-        }
-
-        private void RecordPositionButton_Click(object? sender, EventArgs e)
-        {
-            GetCursorPos(out Point currentPos);
-            clickPosition = currentPos;
-            positionLabel.Text = $"Position: X={currentPos.X}, Y={currentPos.Y}";
-        }
-
         private void ToggleClicking()
         {
             if (isClicking)
@@ -359,9 +293,7 @@ namespace AutoClicker
         private void StartClicking()
         {
             isClicking = true;
-            startStopButton.Text = "Stop Clicking";
-            startStopButton.BackColor = Color.LightCoral;
-            statusLabel.Text = "Status: Clicking Active";
+            statusLabel.Text = "Status: Clicking Active (Use hotkey to stop)";
             statusLabel.ForeColor = Color.Green;
 
             int interval = 1000 / (int)frequencyNumeric.Value;
@@ -372,9 +304,7 @@ namespace AutoClicker
         {
             isClicking = false;
             clickTimer?.Dispose();
-            startStopButton.Text = "Start Clicking";
-            startStopButton.BackColor = Color.LightGreen;
-            statusLabel.Text = "Status: Ready";
+            statusLabel.Text = "Status: Ready (Use hotkey to start)";
             statusLabel.ForeColor = Color.Black;
         }
 
@@ -382,11 +312,8 @@ namespace AutoClicker
         {
             if (!isClicking) return;
 
-            Point targetPos = clickPosition;
-            if (targetPos.X == -1 && targetPos.Y == -1)
-            {
-                GetCursorPos(out targetPos);
-            }
+            // Always use current cursor position
+            GetCursorPos(out Point targetPos);
 
             // Apply random delay if enabled
             if (randomDelayCheckBox.Checked)
@@ -453,7 +380,6 @@ namespace AutoClicker
                 settings.HotkeyIndex = hotkeyComboBox.SelectedIndex;
                 settings.RandomDelay = randomDelayCheckBox.Checked;
                 settings.RandomDelayValue = (int)randomDelayNumeric.Value;
-                settings.ClickPosition = clickPosition;
 
                 string settingsPath = Path.Combine(Application.StartupPath, "settings.json");
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -477,6 +403,5 @@ namespace AutoClicker
         public int HotkeyIndex { get; set; } = 8; // F9
         public bool RandomDelay { get; set; } = false;
         public int RandomDelayValue { get; set; } = 50;
-        public Point ClickPosition { get; set; } = new Point(-1, -1);
     }
 }
