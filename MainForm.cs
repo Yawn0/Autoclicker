@@ -18,6 +18,7 @@ namespace AutoClicker
         private Label clickCountLabel;
         private CheckBox randomDelayCheckBox;
         private NumericUpDown randomDelayNumeric;
+        private CheckBox stayOnTopCheckBox;
         private GroupBox settingsGroupBox;
         private GroupBox statusGroupBox;
 
@@ -146,10 +147,19 @@ namespace AutoClicker
                 Size = new Size(25, 20)
             };
 
+            // Stay on top checkbox
+            stayOnTopCheckBox = new CheckBox
+            {
+                Text = "Stay on Top",
+                Location = new Point(250, 145),
+                Size = new Size(100, 20)
+            };
+            stayOnTopCheckBox.CheckedChanged += StayOnTopCheckBox_CheckedChanged;
+
             settingsGroupBox.Controls.AddRange(new Control[] {
                 frequencyLabel, frequencyTrackBar, frequencyNumeric,
                 hotkeyLabel, hotkeyComboBox,
-                randomDelayCheckBox, randomDelayNumeric, randomDelayLabel
+                randomDelayCheckBox, randomDelayNumeric, randomDelayLabel, stayOnTopCheckBox
             });
 
             // Status GroupBox
@@ -314,6 +324,12 @@ namespace AutoClicker
             SaveSettings();
         }
 
+        private void StayOnTopCheckBox_CheckedChanged(object? sender, EventArgs e)
+        {
+            this.TopMost = stayOnTopCheckBox.Checked;
+            SaveSettings();
+        }
+
         protected override void WndProc(ref Message m)
         {
             if (!_hotkeyManager.ProcessMessage(ref m))
@@ -332,6 +348,8 @@ namespace AutoClicker
             hotkeyComboBox.SelectedIndex = _settings.HotkeyIndex;
             randomDelayCheckBox.Checked = _settings.RandomDelay;
             randomDelayNumeric.Value = _settings.RandomDelayValue;
+            stayOnTopCheckBox.Checked = _settings.StayOnTop;
+            this.TopMost = _settings.StayOnTop;
 
             // Apply settings to services
             _clickEngine.SetFrequency(_settings.Frequency);
@@ -345,6 +363,7 @@ namespace AutoClicker
             _settings.HotkeyIndex = hotkeyComboBox.SelectedIndex;
             _settings.RandomDelay = randomDelayCheckBox.Checked;
             _settings.RandomDelayValue = (int)randomDelayNumeric.Value;
+            _settings.StayOnTop = stayOnTopCheckBox.Checked;
 
             _settingsManager.SaveSettings(_settings);
 
