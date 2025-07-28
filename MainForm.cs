@@ -44,7 +44,7 @@ namespace AutoClicker
         private void InitializeComponent()
         {
             this.Text = "AutoClicker Pro";
-            this.Size = new Size(455, 370);
+            this.Size = new Size(455, 460);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -178,7 +178,7 @@ namespace AutoClicker
             Button resetCounterButton = new Button
             {
                 Text = "Reset Counter",
-                Location = new Point(220, 75),
+                Location = new Point(180, 75),
                 Size = new Size(100, 25)
             };
             resetCounterButton.Click += (s, e) => _clickEngine.ResetCounter();
@@ -186,8 +186,8 @@ namespace AutoClicker
             Button minimizeToTrayButton = new Button
             {
                 Text = "Minimize to Tray",
-                Location = new Point(330, 75),
-                Size = new Size(80, 25)
+                Location = new Point(290, 75),
+                Size = new Size(120, 25)
             };
             minimizeToTrayButton.Click += (s, e) => _systemTrayManager.MinimizeToTray();
 
@@ -195,9 +195,45 @@ namespace AutoClicker
                 statusLabel, clickCountLabel, resetCounterButton, minimizeToTrayButton
             });
 
-            this.Controls.AddRange(new Control[] {
-                settingsGroupBox, statusGroupBox
-            });
+            // Info GroupBox
+            GroupBox infoGroupBox = new GroupBox
+            {
+                Text = "Information",
+                Location = new Point(10, 320),
+                Size = new Size(420, 80)
+            };
+
+            Label authorLabel = new Label
+            {
+                Text = "Author: LT",
+                Location = new Point(15, 25),
+                Size = new Size(160, 20),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            Label licenseLabel = new Label
+            {
+                Text = "License: MIT License",
+                Location = new Point(15, 45),
+                Size = new Size(160, 20),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            Label versionLabel = new Label
+            {
+                Text = "Version: 2.0.0 (.NET 9)",
+                Location = new Point(250, 25),
+                Size = new Size(160, 20),
+                Font = new Font("Segoe UI", 9F)
+            };
+
+            infoGroupBox.Controls.AddRange([
+                authorLabel, licenseLabel, versionLabel
+            ]);
+
+            this.Controls.AddRange([
+                settingsGroupBox, statusGroupBox, infoGroupBox
+            ]);
         }
 
 
@@ -206,7 +242,7 @@ namespace AutoClicker
         {
             _hotkeyManager.Initialize(this.Handle);
             _systemTrayManager.Initialize();
-            
+
             _clickEngine.ClickPerformed += OnClickPerformed;
             _clickEngine.StatusChanged += OnStatusChanged;
             _hotkeyManager.HotkeyPressed += OnHotkeyPressed;
@@ -248,7 +284,8 @@ namespace AutoClicker
         {
             if (statusLabel.InvokeRequired)
             {
-                statusLabel.Invoke(new Action(() => {
+                statusLabel.Invoke(new Action(() =>
+                {
                     statusLabel.Text = e.Status;
                     statusLabel.ForeColor = e.IsActive ? Color.Green : Color.Blue;
                 }));
@@ -310,7 +347,7 @@ namespace AutoClicker
             _settings.RandomDelayValue = (int)randomDelayNumeric.Value;
 
             _settingsManager.SaveSettings(_settings);
-            
+
             // Update services with new settings
             _clickEngine.SetRandomDelay(_settings.RandomDelay, _settings.RandomDelayValue);
         }
