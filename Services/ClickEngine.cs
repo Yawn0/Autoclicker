@@ -8,12 +8,21 @@ namespace AutoClicker.Services
 {
     public class ClickEngine
     {
-        // Win32 API imports for mouse clicking
+        // Win32 API imports for mouse clicking and cursor control
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
         [DllImport("user32.dll")]
         public static extern bool GetCursorPos(out Point lpPoint);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetCursorPos(int x, int y);
+
+        [DllImport("user32.dll")]
+        public static extern bool ClipCursor(ref Rectangle lpRect);
+
+        [DllImport("user32.dll")]
+        public static extern bool ClipCursor(IntPtr lpRect);
 
         // Mouse event constants
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
@@ -26,6 +35,7 @@ namespace AutoClicker.Services
         private int _frequency = 10;
         private bool _randomDelayEnabled = false;
         private int _randomDelayValue = 50;
+        private Point _lockedPosition;
 
         public event EventHandler<ClickEventArgs>? ClickPerformed;
         public event EventHandler<StatusChangedEventArgs>? StatusChanged;
@@ -54,8 +64,11 @@ namespace AutoClicker.Services
         {
             if (_isClicking) return;
 
+            // Capture current cursor position and lock it
+            GetCursorPos(out _lockedPosition);
+            
             _isClicking = true;
-            StatusChanged?.Invoke(this, new StatusChangedEventArgs("Status: Clicking Active (Use hotkey to stop)", true));
+            StatusChanged?.Invoke(this, new StatusChangedEventArgs("Status: Clicking Active", true));
 
             int interval = 1000 / _frequency;
             _clickTimer = new System.Threading.Timer(PerformClick, null, 0, interval);
@@ -68,7 +81,11 @@ namespace AutoClicker.Services
             _isClicking = false;
             _clickTimer?.Dispose();
             _clickTimer = null;
-            StatusChanged?.Invoke(this, new StatusChangedEventArgs("Status: Ready (Use hotkey to start)", false));
+            
+            // Release cursor lock
+            ClipCursor(IntPtr.Zero);
+            
+            StatusChanged?.Invoke(this, new StatusChangedEventArgs("Status: Ready", false));
         }
 
         public void ToggleClicking()
@@ -93,8 +110,8 @@ namespace AutoClicker.Services
         {
             if (!_isClicking) return;
 
-            // Always use current cursor position
-            GetCursorPos(out Point targetPos);
+            // Ensure cursor stays at locked position
+            SetCursorPos(_lockedPosition.X, _lockedPosition.Y);
 
             // Apply random delay if enabled
             if (_randomDelayEnabled)
@@ -106,8 +123,8 @@ namespace AutoClicker.Services
                 }
             }
 
-            // Perform the click
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (uint)targetPos.X, (uint)targetPos.Y, 0, 0);
+            // Perform the click at locked position
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, (uint)_lockedPosition.X, (uint)_lockedPosition.Y, 0, 0);
             
             _clickCount++;
             ClickPerformed?.Invoke(this, new ClickEventArgs(_clickCount));
@@ -116,6 +133,8 @@ namespace AutoClicker.Services
         public void Dispose()
         {
             StopClicking();
+            // Ensure cursor lock is released
+            ClipCursor(IntPtr.Zero);
         }
     }
 
