@@ -2,3 +2,5 @@
 /obj
 /run_autoclicker.bat
 /publish*
+.vs
+*.csproj.user
